@@ -4,6 +4,7 @@ from preprocess_data import transform_letter_to_index, load_data
 from torch.utils.data import DataLoader
 import constants as con
 from pBLSTM import pBLSTM
+from Encoder import Encoder
 
 class Train:
     def __init__(self):
@@ -51,7 +52,7 @@ class Train:
 
     def run(self):
         self.train_loader, self.val_loader, self.test_loader = self.setup()
-        self.model = pBLSTM()
+        self.model = Encoder()
         self.train_model()
 
 train = Train()
