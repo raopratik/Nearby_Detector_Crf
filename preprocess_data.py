@@ -10,13 +10,13 @@ def load_data():
 
     data_dict = dict()
 
-    data_dict['speech_train'] = np.load(con.data_path + 'dev.npy', allow_pickle=True, encoding='bytes')
-    data_dict['speech_valid'] = np.load(con.data_path + 'dev.npy', allow_pickle=True, encoding='bytes')
-    data_dict['speech_test'] = np.load(con.data_path + 'test.npy', allow_pickle=True, encoding='bytes')
+    data_dict['speech_train'] = np.load(con.DATA_PATH + 'dev.npy', allow_pickle=True, encoding='bytes')
+    data_dict['speech_valid'] = np.load(con.DATA_PATH + 'dev.npy', allow_pickle=True, encoding='bytes')
+    data_dict['speech_test'] = np.load(con.DATA_PATH + 'dev.npy', allow_pickle=True, encoding='bytes')
 
-    data_dict['transcript_train'] = np.load(con.data_path + './dev_transcripts.npy', allow_pickle=True,
+    data_dict['transcript_train'] = np.load(con.DATA_PATH + './dev_transcripts.npy', allow_pickle=True,
                                             encoding='bytes')
-    data_dict['transcript_valid'] = np.load(con.data_path + './dev_transcripts.npy', allow_pickle=True,
+    data_dict['transcript_valid'] = np.load(con.DATA_PATH + './dev_transcripts.npy', allow_pickle=True,
                                             encoding='bytes')
 
     return data_dict
@@ -32,7 +32,8 @@ def transform_letter_to_index(transcripts, letter_list):
     for transcript in transcripts:
         transcript_list = []
         for i, word in enumerate(transcript):
-            transcript_list += [letter_list.index(char) for char in word.decode('utf-8')]
+
+            transcript_list += [letter_list.index(char.upper()) for char in word.decode('utf-8')]
 
             if i != len(transcript) - 1:
                 transcript_list += [letter_list.index(' ')]
