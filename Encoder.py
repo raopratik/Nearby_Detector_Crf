@@ -33,7 +33,7 @@ class Encoder(nn.Module):
 
         keys = self.key_network(output_padded)
         value = self.value_network(output_padded)
-        return keys, value
+        return keys, value, output_lengths
 
     def pb_block(self, output_padded, output_lengths, pb):
         output_padded, output_lengths = \

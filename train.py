@@ -5,6 +5,8 @@ from torch.utils.data import DataLoader
 import constants as con
 from pBLSTM import pBLSTM
 from Encoder import Encoder
+from Seq2Seq import Seq2Seq
+from tqdm import tqdm
 
 class Train:
     def __init__(self):
@@ -32,7 +34,7 @@ class Train:
         return train_loader, val_loader, test_loader
 
     def train_model(self):
-        for feed_dict in self.train_loader:
+        for feed_dict in tqdm(self.train_loader):
             feed_dict = self.convert_to_cuda(feed_dict)
             x = feed_dict['input_data']
             x_lens = feed_dict['input_lens']
@@ -41,7 +43,9 @@ class Train:
 
             # x.shape -> (S, N, E)
             # y.shape - > (S, N)
-            self.model(x, x_lens)
+            # speech_input, speech_len, text_input=None, isTrain=True, epoch=None):
+            self.model(speech_input=x, speech_len=x_lens, text_input=y,
+                       isTrain=True, epoch=None)
 
 
     def convert_to_cuda(self, feed_dict):
@@ -52,7 +56,7 @@ class Train:
 
     def run(self):
         self.train_loader, self.val_loader, self.test_loader = self.setup()
-        self.model = Encoder()
+        self.model = Seq2Seq(input_dim=40, vocab_size=len(con.LETTER_LIST), hidden_dim=10)
         self.train_model()
 
 train = Train()

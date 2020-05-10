@@ -25,7 +25,7 @@ class Decoder(nn.Module):
 
         self.character_prob = nn.Linear(key_size + value_size, vocab_size)
 
-    def forward(self, key, values, lens, text=None, isTrain=True):
+    def forward(self, key, values, lens, text=None, isTrain=True, epoch=None):
         '''
         :param key :(T, N, key_size) Output of the Encoder Key projection layer
         :param values: (T, N, value_size) Output of the Encoder Value projection layer
@@ -54,10 +54,10 @@ class Decoder(nn.Module):
             #   out of the loop so you do you do not get index out of range errors.
 
             if (isTrain):
-                char_embed = embeddings[:, i, :]
+                char_embed = embeddings[i, :, :]
             else:
                 char_embed = self.embedding(prediction.argmax(dim=-1))
-
+            # print("char_emb", char_embed.shape, "context", context_vector.shape)
             inp = torch.cat([char_embed, context_vector], dim=1)
             hidden_states[0] = self.lstm1(inp, hidden_states[0])
 
@@ -67,7 +67,8 @@ class Decoder(nn.Module):
             ### Compute attention from the output of the second LSTM Cell ###
             output = hidden_states[1][0]
 
-            context_vector, attention = self.attention(query=output, key=key, value=values, lens=lens)
+            context_vector, attention = self.attention(query=output, key=key,
+                                                       value=values, lens=lens)
 
             prediction = self.character_prob(torch.cat([output, context_vector], dim=1))
             predictions.append(prediction.unsqueeze(1))
