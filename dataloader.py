@@ -32,10 +32,6 @@ def collate_train(batch_data):
     input, target = zip(*batch_data)
 
     input_lens = torch.tensor([len(inp) for inp in input]).long()
-    # seq = sorted(range(len(input_lens)), key=input_lens.__getitem__, reverse=True)
-    #
-    # input_data = [input[i] for i in seq]
-    # target_data = [target[i] for i in seq]
     input_data = pad_sequence(input)
     target_lens = [len(tar) for tar in target]
     target_data = pad_sequence(target)

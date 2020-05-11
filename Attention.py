@@ -21,6 +21,7 @@ class Attention(nn.Module):
         :return output: Attended Context
         :return attention_mask: Attention mask that can be plotted
         '''
+
         key = key.permute(1, 0, 2)
         value = value.permute(1, 0, 2)
 
@@ -35,12 +36,12 @@ class Attention(nn.Module):
 
         # Set attention logits at padding positions to negative infinity.
         attention.masked_fill_(mask, -1e9)
-
         attention = nn.functional.softmax(attention, dim=1)
 
         # Compute attention-weighted sum of context vectors
         # Input shape of bmm: (batch_size, 1, max_len), (batch_size, max_len, hidden_size)
         # Output shape of bmm: (batch_size, 1, hidden_size)
+
         out = torch.bmm(attention.unsqueeze(1), value).squeeze(1)
 
         return out, attention

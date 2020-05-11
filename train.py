@@ -16,6 +16,7 @@ import csv
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 import time
 
+
 class Train:
     def __init__(self):
         self.train_loader = None
@@ -23,7 +24,7 @@ class Train:
         self.test_loader = None
         self.model = None
         self.criterion = nn.CrossEntropyLoss(ignore_index=0)
-        self.epochs = 50
+        self.epochs = 35
         self.optimizer = None
         self.scheduler = None
 
@@ -38,27 +39,12 @@ class Train:
 
         train_loader = DataLoader(train_dataset, batch_size=con.BATCH_SIZE, shuffle=True,
                                   collate_fn=collate_train)
-        val_loader = DataLoader(val_dataset, batch_size=con.BATCH_SIZE, shuffle=True,
+        val_loader = DataLoader(val_dataset, batch_size=con.BATCH_SIZE, shuffle=False,
                                   collate_fn=collate_train)
         test_loader = DataLoader(test_dataset, batch_size=con.BATCH_SIZE, shuffle=False,
                                  collate_fn=collate_test)
 
         return train_loader, val_loader, test_loader
-
-    def train_model_debug(self):
-        for feed_dict in tqdm(self.train_loader):
-            feed_dict = self.convert_to_cuda(feed_dict)
-            x = feed_dict['input_data']
-            x_lens = feed_dict['input_lens']
-            y = feed_dict['target_data']
-            y_lens = feed_dict['target_lens']
-
-            # x.shape -> (S, N, E)
-            # y.shape - > (S, N)
-            # speech_input, speech_len, text_input=None, isTrain=True, epoch=None):
-            predictions = self.model(speech_input=x, speech_len=x_lens, text_input=y,
-                       isTrain=True, epoch=None)
-
 
     def convert_to_cuda(self, feed_dict):
         for key in feed_dict:
@@ -68,7 +54,7 @@ class Train:
 
     def run(self):
         self.train_loader, self.val_loader, self.test_loader = self.setup()
-        self.model = Seq2Seq(input_dim=40, vocab_size=len(con.LETTER_LIST), hidden_dim=512)
+        self.model = Seq2Seq(input_dim=40, vocab_size=len(con.LETTER_LIST), hidden_dim=5)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
                                                                     patience=1,
@@ -77,13 +63,16 @@ class Train:
         self.train_model_v2()
 
     def train_model_v2(self):
-        self.model.train()
+
         self.model.to(DEVICE)
         start = time.time()
         for epoch in range(self.epochs):
             # 1) Iterate through your loader
             running_loss = 0
+
             for feed_dict in tqdm(self.train_loader):
+                self.model.train()
+                self.optimizer.zero_grad()
                 feed_dict = self.convert_to_cuda(feed_dict)
                 x = feed_dict['input_data']
                 x_lens = feed_dict['input_lens']
@@ -96,12 +85,12 @@ class Train:
 
             # 4) Pass your inputs, and length of speech into the model.
                 predictions = self.model(speech_input=x, speech_len=x_lens, text_input=y,
-                           isTrain=True, epoch=epoch)
+                                         isTrain=True, epoch=epoch)
 
                 y = y.t()[:, 1:]
                 predictions = predictions[:, :-1:, :]
-                predictions = predictions.permute(0, 2, 1)
 
+                predictions = predictions.permute(0, 2, 1)
                 loss = self.criterion(predictions, y)
 
                 loss.backward()
@@ -138,7 +127,6 @@ class Train:
             x = feed_dict['input_data']
             x_lens = feed_dict['input_lens']
             y = feed_dict['target_data']
-            y_lens = feed_dict['target_lens']
 
         # 2) Use torch.autograd.set_detect_anomaly(True) to get notices about gradient explosion
 
@@ -160,7 +148,6 @@ class Train:
                     res += index2letter[y[i][j]]
                 res = res.replace('<sos>', '').replace('<pad>', '').replace('<eos>', '')
                 target.append(res)
-
 
             for i in range(predictions.shape[0]):
                 res = ''
@@ -203,7 +190,6 @@ class Train:
                 res = res.replace('<sos>', '').replace('<pad>', '').replace('<eos>', '')
 
                 preds.append(res)
-
 
         with open('submission.csv', 'w') as csvfile:
             testwriter = csv.writer(csvfile, delimiter=',')

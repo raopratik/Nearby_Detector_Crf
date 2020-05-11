@@ -20,7 +20,7 @@ class Seq2Seq(nn.Module):
         self.decoder = Decoder(vocab_size, hidden_dim)
 
     def forward(self, speech_input, speech_len, text_input=None, isTrain=True, epoch=None):
-        key, value, lens = self.encoder(speech_input, speech_len)
+        key, value, lens = self.encoder(speech_input, speech_len, isTrain)
         if (isTrain == True):
             predictions = self.decoder(key, value, lens, text_input, epoch=epoch)
         else:
