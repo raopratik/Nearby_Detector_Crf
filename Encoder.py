@@ -2,21 +2,21 @@ import torch
 from torch import nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from pBLSTM import pBLSTM
-
+from LockedDropout import LockedDropout
 class Encoder(nn.Module):
     '''
     Encoder takes the utterances as inputs and returns the key and value.
     Key and value are nothing but simple projections of the output from pBLSTM network.
     '''
 
-    def __init__(self, input_dim=40, hidden_dim=100, value_size=128, key_size=128):
+    def __init__(self, input_dim=40, hidden_dim=512, value_size=128, key_size=128):
         super(Encoder, self).__init__()
         self.lstm = nn.LSTM(input_size=input_dim, hidden_size=hidden_dim, num_layers=1,
                             bidirectional=True)
         self.pb1 = pBLSTM(input_dim=hidden_dim*4, hidden_dim=hidden_dim)
         self.pb2 = pBLSTM(input_dim=hidden_dim*4, hidden_dim=hidden_dim)
         self.pb3 = pBLSTM(input_dim=hidden_dim*4, hidden_dim=hidden_dim)
-
+        self.lockedropout = LockedDropout()
         ### Add code to define the blocks of pBLSTMs! ###
 
         self.key_network = nn.Linear(hidden_dim * 2, value_size)
@@ -27,6 +27,7 @@ class Encoder(nn.Module):
         packed_outputs, _ = self.lstm(rnn_inp)
         ### Use the outputs and pass it through the pBLSTM blocks! ###
         output_padded, output_lengths = pad_packed_sequence(packed_outputs)
+        output_padded = self.lockedropout(output_padded)
         output_padded, output_lengths = self.pb_block(output_padded, output_lengths, self.pb1)
         output_padded, output_lengths = self.pb_block(output_padded, output_lengths, self.pb2)
         output_padded, output_lengths = self.pb_block(output_padded, output_lengths, self.pb3)
@@ -39,6 +40,7 @@ class Encoder(nn.Module):
         output_padded, output_lengths = \
             self.half_network(output_padded=output_padded, output_lengths=output_lengths)
         output_padded, output_lengths = pb(output_padded, output_lengths)
+        output_padded = self.lockedropout(output_padded)
         return output_padded, output_lengths
 
 

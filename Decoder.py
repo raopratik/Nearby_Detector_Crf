@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from Attention import Attention
 from constants import DEVICE
-
+import random
 
 class Decoder(nn.Module):
     '''
@@ -13,12 +13,13 @@ class Decoder(nn.Module):
     Methods like Gumble noise and teacher forcing can also be incorporated for improving the performance.
     '''
 
-    def __init__(self, vocab_size, hidden_dim=200, value_size=128, key_size=128, isAttended=True):
+    def __init__(self, vocab_size, hidden_dim=512, value_size=128, key_size=128, isAttended=True):
         super(Decoder, self).__init__()
         self.embedding = nn.Embedding(vocab_size, hidden_dim, padding_idx=0)
         self.lstm1 = nn.LSTMCell(input_size=hidden_dim + value_size, hidden_size=hidden_dim)
         self.lstm2 = nn.LSTMCell(input_size=hidden_dim, hidden_size=key_size)
-
+        self.teacher_prob = 0.0
+        self.curr_epoch = 0
         self.isAttended = isAttended
         if (isAttended == True):
             self.attention = Attention()
@@ -35,8 +36,13 @@ class Decoder(nn.Module):
         '''
         batch_size = key.shape[1]
 
+        if isTrain and self.teacher_prob < 0.5 and self.curr_epoch != epoch:
+            self.teacher_prob += 0.025
+            self.curr_epoch = epoch
+
         if (isTrain == True):
-            max_len = text.shape[1]
+
+            max_len = text.shape[0]
             embeddings = self.embedding(text)
         else:
             max_len = 250
@@ -47,16 +53,21 @@ class Decoder(nn.Module):
 
         context_vector = values[0, :, :]
 
+
         for i in range(max_len):
             # * Implement Gumble noise and teacher forcing techniques
             # * When attention is True, replace values[i,:,:] with the context you get from attention.
             # * If you haven't implemented attention yet, then you may want to check the index and break
             #   out of the loop so you do you do not get index out of range errors.
+            curr_prob = random.uniform(0, 1)
+            if i == 0:
+                prediction[:, 33] = 1
 
-            if (isTrain):
+            if (isTrain) and curr_prob >= self.teacher_prob:
                 char_embed = embeddings[i, :, :]
             else:
                 char_embed = self.embedding(prediction.argmax(dim=-1))
+
             # print("char_emb", char_embed.shape, "context", context_vector.shape)
             inp = torch.cat([char_embed, context_vector], dim=1)
             hidden_states[0] = self.lstm1(inp, hidden_states[0])

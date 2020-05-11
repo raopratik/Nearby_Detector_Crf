@@ -12,7 +12,7 @@ class pBLSTM(nn.Module):
     The major reason is inability of AttendAndSpell operation to extract relevant information
     from a large number of input steps.
     '''
-    def __init__(self, input_dim=40, hidden_dim=10):
+    def __init__(self, input_dim=40, hidden_dim=512):
         super(pBLSTM, self).__init__()
         self.blstm = nn.LSTM(input_size=input_dim, hidden_size=hidden_dim, num_layers=1, bidirectional=True)
 

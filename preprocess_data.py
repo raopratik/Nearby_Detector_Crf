@@ -52,7 +52,7 @@ def create_dictionaries(letter_list):
 
     for i, letter in enumerate(letter_list):
         letter2index[letter] = i
-        index2letter[i] = letter[i]
+        index2letter[i] = letter_list[i]
     return letter2index, index2letter
 
 
