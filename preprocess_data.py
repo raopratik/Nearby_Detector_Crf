@@ -19,6 +19,7 @@ def load_data():
     data_dict['transcript_valid'] = np.load(con.DATA_PATH + './dev_transcripts.npy', allow_pickle=True,
                                             encoding='bytes')
 
+
     return data_dict
 
 
@@ -40,7 +41,6 @@ def transform_letter_to_index(transcripts, letter_list):
 
         l2il.append([letter_list.index('<sos>')] +
                     transcript_list + [letter_list.index('<eos>')])
-
     return l2il
 
 '''

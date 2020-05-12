@@ -15,8 +15,8 @@ class Decoder(nn.Module):
 
     def __init__(self, vocab_size, hidden_dim=512, value_size=128, key_size=128, isAttended=True):
         super(Decoder, self).__init__()
-        self.embedding = nn.Embedding(vocab_size, hidden_dim, padding_idx=0)
-        self.lstm1 = nn.LSTMCell(input_size=hidden_dim + value_size, hidden_size=hidden_dim)
+        self.embedding = nn.Embedding(vocab_size, 256, padding_idx=0)
+        self.lstm1 = nn.LSTMCell(input_size=256 + value_size, hidden_size=hidden_dim)
         self.lstm2 = nn.LSTMCell(input_size=hidden_dim, hidden_size=key_size)
         self.teacher_prob = 0.0
         self.curr_epoch = 0

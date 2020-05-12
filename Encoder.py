@@ -23,14 +23,22 @@ class Encoder(nn.Module):
         self.value_network = nn.Linear(hidden_dim * 2, key_size)
 
     def forward(self, x, lens, isTrain):
+
         rnn_inp = pack_padded_sequence(x, lengths=lens, batch_first=False, enforce_sorted=False)
         packed_outputs, _ = self.lstm(rnn_inp)
         ### Use the outputs and pass it through the pBLSTM blocks! ###
         output_padded, output_lengths = pad_packed_sequence(packed_outputs)
+
         output_padded = self.lockedropout(output_padded, isTrain)
-        output_padded, output_lengths = self.pb_block(output_padded, output_lengths, self.pb1, isTrain)
-        output_padded, output_lengths = self.pb_block(output_padded, output_lengths, self.pb2, isTrain)
-        output_padded, output_lengths = self.pb_block(output_padded, output_lengths, self.pb3, isTrain)
+        output_padded, output_lengths = self.pb_block(output_padded,
+                                                      output_lengths, self.pb1, isTrain)
+
+        output_padded, output_lengths = self.pb_block(output_padded,
+                                                      output_lengths, self.pb2, isTrain)
+
+        output_padded, output_lengths = self.pb_block(output_padded,
+                                                      output_lengths, self.pb3, isTrain)
+
 
         keys = self.key_network(output_padded)
         value = self.value_network(output_padded)
@@ -40,7 +48,8 @@ class Encoder(nn.Module):
         output_padded, output_lengths = \
             self.half_network(output_padded=output_padded, output_lengths=output_lengths)
         output_padded, output_lengths = pb(output_padded, output_lengths)
-        output_padded = self.lockedropout(output_padded, isTrain)
+        if pb != self.pb3:
+            output_padded = self.lockedropout(output_padded, isTrain)
         return output_padded, output_lengths
 
     def half_network(self, output_padded, output_lengths):
@@ -50,9 +59,13 @@ class Encoder(nn.Module):
             output_padded = output_padded[:-1, :, :]
 
         output_lengths = [curr_len // 2 for curr_len in output_lengths]
+
         output_padded = torch.transpose(output_padded, 0, 1)
+
         output_padded = output_padded.reshape(N, S // 2, E * 2)
+
         output_padded = torch.transpose(output_padded, 0, 1)
+
         return output_padded, output_lengths
 
 

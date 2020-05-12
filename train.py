@@ -88,7 +88,8 @@ class Train:
                                          isTrain=True, epoch=epoch)
 
                 y = y.t()[:, 1:]
-                predictions = predictions[:, :-1:, :]
+
+                predictions = predictions[:, :-1, :]
 
                 predictions = predictions.permute(0, 2, 1)
                 loss = self.criterion(predictions, y)
@@ -137,7 +138,7 @@ class Train:
                        isTrain=False, epoch=None)
 
             y = y.t()[:, 1:]
-            predictions = predictions[:, :-1:, :]
+            predictions = predictions[:, :-1, :]
 
             y = y.detach().cpu().numpy()
             predictions = predictions.detach().cpu().numpy()
@@ -145,6 +146,8 @@ class Train:
             for i in range(y.shape[0]):
                 res = ''
                 for j in range(y.shape[1]):
+                    if res == 34:
+                        break
                     res += index2letter[y[i][j]]
                 res = res.replace('<sos>', '').replace('<pad>', '').replace('<eos>', '')
                 target.append(res)
@@ -152,6 +155,8 @@ class Train:
             for i in range(predictions.shape[0]):
                 res = ''
                 for j in range(predictions.shape[1]):
+                    if res == 34:
+                        break
                     res += index2letter[np.argmax(predictions[i][j])]
                 res = res.replace('<sos>', '').replace('<pad>', '').replace('<eos>', '')
 
@@ -186,7 +191,7 @@ class Train:
                 res = ''
                 for j in range(predictions.shape[1]):
                     res += index2letter[np.argmax(predictions[i][j])]
-                print(res)
+                # print(res)
                 res = res.replace('<sos>', '').replace('<pad>', '').replace('<eos>', '')
 
                 preds.append(res)
