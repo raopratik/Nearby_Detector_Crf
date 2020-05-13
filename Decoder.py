@@ -84,4 +84,4 @@ class Decoder(nn.Module):
             prediction = self.character_prob(torch.cat([output, context_vector], dim=1))
             predictions.append(prediction.unsqueeze(1))
 
-        return torch.cat(predictions, dim=1)
+        return torch.transpose(torch.cat(predictions, dim=1), 0, 1)
